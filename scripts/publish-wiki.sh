@@ -20,7 +20,13 @@ if [[ ! -d "${TARGET_DIR}/.git" ]]; then
   git clone "${WIKI_REMOTE}" "${TARGET_DIR}"
 else
   git -C "${TARGET_DIR}" fetch origin
-  git -C "${TARGET_DIR}" pull --ff-only origin master || git -C "${TARGET_DIR}" pull --ff-only origin main
+  default_branch_ref="$(git -C "${TARGET_DIR}" symbolic-ref refs/remotes/origin/HEAD 2>/dev/null || true)"
+  default_branch="${default_branch_ref##refs/remotes/origin/}"
+  if [[ -n "${default_branch}" ]]; then
+    git -C "${TARGET_DIR}" pull --ff-only origin "${default_branch}"
+  else
+    git -C "${TARGET_DIR}" pull --ff-only origin main || git -C "${TARGET_DIR}" pull --ff-only origin master
+  fi
 fi
 
 cp "${SOURCE_DIR}/README.md" "${TARGET_DIR}/Home.md"
